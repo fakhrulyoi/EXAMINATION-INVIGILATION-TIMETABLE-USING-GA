@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examination Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #059669;
+            --warning: #d97706;
+            --error: #dc2626;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.5;
+        }
+
+        .dashboard {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 260px;
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem 1rem;
+            position: fixed;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--primary-dark);
+        }
+
+        .nav-item i {
+            width: 1.5rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--gray-700);
+            font-size: 0.875rem;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 0.375rem;
+            width: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .export-button {
+            background: var(--success);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .export-button:hover {
+            opacity: 0.9;
+        }
+        .badge-violation {
+            background: #fee2e2;
+            color: #991b1b;
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-high {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-medium {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-low {
+            background-color: #e0f2fe;
+            color: #075985;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-violation {
+            background-color: #fecaca;
+            color: #7f1d1d;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+
+        .violation-count {
+            font-weight: bold;
+            color: var(--error);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+            .main-content {
+                margin-left: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .table-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .search-input {
+                width: 100%;
+            }
+        }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Exam Dashboard</h2>
+            </div>
+            <nav>
+                <a href="#overview" class="nav-item active" onclick="showSection('overview', this)">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#lecturer-stats" class="nav-item" onclick="showSection('lecturer-stats', this)">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Lecturer Stats (L & K)</span>
+                </a>
+                <a href="#staff-stats" class="nav-item" onclick="showSection('staff-stats', this)">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Staff Stats (S)</span>
+                </a>
+                <a href="#violations" class="nav-item" onclick="showSection('violations', this)">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Constraint Violations</span>
+                </a>
+                <a href="{{ url_for('index') }}" class="nav-item">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Timetable Generator</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <section id="overview" class="section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-value">{{ total_exams }}</div>
+                                <div class="stat-label">Total Exams</div>
+                            </div>
+                            <div class="stat-icon" style="background: #e0e7ff;">
+                                <i class="fas fa-book" style="color: var(--primary);"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-value">{{ total_lecturers }}</div>
+                                <div class="stat-label">Total Lecturers</div>
+                            </div>
+                            <div class="stat-icon" style="background: #d1fae5;">
+                                <i class="fas fa-chalkboard-teacher" style="color: var(--success);"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div>
+                                <div class="stat-value">{{ total_staff }}</div>
+                                <div class="stat-label">Total Staff</div>
+                            </div>
+                            <div class="stat-icon" style="background: #dbeafe;">
+                                <i class="fas fa-user-tie" style="color: #2563eb;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lecturer-stats" class="section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">Lecturer Statistics</h3>
+                        <div class="table-actions">
+                            <input type="text" id="searchLecturer" class="search-input" placeholder="Search lecturer...">
+                            <button onclick="exportToExcel('lecturer')" class="export-button">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Time</th>
+                                    <th>Course Code</th>
+                                    <th>Venue</th>
+                                    <th>Status</th>
+                                    <th>Total Sessions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in invigilator_stats %}
+                                    {% if '(L)' in stat.name or '(K)' in stat.name %}
+                                    <tr>
+                                        <td>{{ stat.name }}</td>
+                                        <td>{{ stat.date }}</td>
+                                        <td>{{ stat.day }}</td>
+                                        <td>{{ stat.time }}</td>
+                                        <td>{{ stat.course_code }}</td>
+                                        <td>{{ stat.venue }}</td>
+                                        <td>{{ 'Ketua' if '(K)' in stat.name else 'Lecturer' }}</td>
+                                        <td><span class="badge badge-success">{{ stat.total_sessions }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="staff-stats" class="section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">Staff Statistics</h3>
+                        <div class="table-actions">
+                            <input type="text" id="searchStaff" class="search-input" placeholder="Search staff...">
+                            <button onclick="exportToExcel('staff')" class="export-button">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Time</th>
+                                    <th>Course Code</th>
+                                    <th>Venue</th>
+                                    <th>Total Sessions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in invigilator_stats %}
+                                    {% if '(S)' in stat.name %}
+                                    <tr>
+                                        <td>{{ stat.name }}</td>
+                                        <td>{{ stat.date }}</td>
+                                        <td>{{ stat.day }}</td>
+                                        <td>{{ stat.time }}</td>
+                                        <td>{{ stat.course_code }}</td>
+                                        <td>{{ stat.venue }}</td>
+                                        <td><span class="badge badge-success">{{ stat.total_sessions }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="violations" class="section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">Constraint Violations</h3>
+                        <div class="table-actions">
+                            <input type="text" id="searchViolation" class="search-input" placeholder="Search violation...">
+                            <button onclick="exportToExcel('violations')" class="export-button">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Violation Type</th>
+                                    <th>Count</th>
+                                    <th>Constraint</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for violation, details in violations.items() %}
+                                <tr>
+                                    <td><span class="badge-violation">{{ violation }}</span></td>
+                                    <td>{{ details.count }}</td>
+                                    <td>
+                                        {% if violation in ['Ketua Not Pensyarah Kanan', 'Lecturer Invigilating Own Exam'] %}
+                                            <span class="badge-high">Hard</span>
+                                        {% elif violation in ['Exceeded Invigilation Limit', 'Insufficient Invigilators'] %}
+                                            <span class="badge-medium">Hard</span>
+                                        {% else %}
+                                            <span class="badge-low">Soft</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if details.exams %}
+                                            {% for exam in details.exams %}
+                                                <div style="border: 1px solid #e5e7eb; padding: 1rem; margin-bottom: 0.5rem; border-radius: 0.375rem;">
+                                                    <div><strong>Course Code:</strong> {{ exam['Kod Kursus'] }}</div>
+                                                    <div><strong>Date:</strong> {{ exam['Tarikh'] }}</div>
+                                                    <div><strong>Time:</strong> {{ exam['Masa'] }}</div>
+                                                    <div><strong>Venue:</strong> {{ exam['Tempat'] }}</div>
+                                                    <div><strong>Invigilators:</strong> {{ ', '.join(exam['Invigilators']) }}</div>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="text-gray-500">No specific exam details available</div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function showSection(sectionId, navItem) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            navItem.classList.add('active');
+        }
+
+        // Search functionality
+        ['Lecturer', 'Staff', 'Violation'].forEach(type => {
+            document.getElementById(`search${type}`).addEventListener('keyup', function() {
+                const searchValue = this.value.toLowerCase();
+                const tableId = type.toLowerCase() === 'lecturer' ? 'lecturer-stats' : 
+                               type.toLowerCase() === 'staff' ? 'staff-stats' : 'violations';
+                
+                const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchValue) ? '' : 'none';
+                });
+            });
+        });
+
+        function exportToExcel(type) {
+            alert('Export functionality will be implemented based on backend requirements');
+        }
+    </script>
+</body>
+</html>
